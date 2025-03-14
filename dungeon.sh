@@ -126,10 +126,10 @@ move_player() {
     # Check if the new position is within bounds
     if [[ $new_x -ge 0 && $new_x -lt $dungeon_width && $new_y -ge 0 && $new_y -lt $dungeon_height ]]; then
         if [[ ${dungeon[$new_y]:$new_x:1} == "#" ]]; then
-            update_message="You encountered a wall!"
+            update_message="You attack the wall!"
             destroy_wall $new_x $new_y
-        elif [[ ${dungeon[$new_y]:$new_x:1} == "&" ]]; then
-            update_message="You encountered an enemy!"
+        elif [[ $new_x -eq $enemy_x && $new_y -eq $enemy_y ]]; then
+            update_message="You attack the monster!"
             fight_enemy
         elif [[ $new_x -eq $item_x && $new_y -eq $item_y && ! $has_item ]]; then
             has_item=true
@@ -146,15 +146,25 @@ move_player() {
 destroy_wall() {
     local x=$1
     local y=$2
-    dungeon[$y]=$(echo "${dungeon[$y]}" | sed "s/./ /$((x + 1))")
-    if [[ $((RANDOM % 100)) -lt 10 ]]; then
+    if [[ $((RANDOM % 100)) -lt 90 ]]; then
+        dungeon[$y]=$(echo "${dungeon[$y]}" | sed "s/./ /$((x + 1))")
         if [[ $((RANDOM % 100)) -lt 10 ]]; then
-            ((player_gold++))
-            update_message+="\nYou found a hidden item!\nYour gold increased by 1."
-        else
-            ((player_health--))
-            update_message+="\nYou were hurt by the falling wall!\nYour health decreased by 1."
+            if [[ $((RANDOM % 100)) -lt 10 ]]; then
+                ((player_gold++))
+                update_message+="\nYou found a hidden item!\nYour gold increased by 1."
+            else
+                ((player_health--))
+                update_message+="\nYou were hurt by the falling wall!\nYour health decreased by 1."
+            fi
         fi
+    fi
+}
+
+# Function to check for encounters
+check_encounter() {
+    if [[ $player_x -eq $enemy_x && $player_y -eq $enemy_y ]]; then
+        update_message="You encountered an enemy!"
+        fight_enemy
     fi
 }
 
