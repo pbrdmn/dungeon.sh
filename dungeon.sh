@@ -2,13 +2,8 @@
 
 # title: Dungeon Game
 
-# This is a simple text-based dungeon game where the player can move around a dungeon, encounter enemies, find items, and fight battles.
-
 # Initial Setup
-
 MAX_PLAYER_HEALTH=10
-
-# Initialize game variables
 PLAYING=true
 player_x=0
 player_y=0
@@ -19,12 +14,13 @@ enemy_y=2
 item_x=3
 item_y=4
 has_item=false
-wall_percentage=20  # Percentage of cells that should be walls
+wall_percentage=20 # Percentage of cells that should be walls
 player_health=$MAX_PLAYER_HEALTH
 player_gold=0
 kills=0
 player_level=1
 kills_this_level=0
+update_message=""
 
 # Function to generate the dungeon layout
 generate_dungeon() {
@@ -68,6 +64,9 @@ display_dungeon() {
     fi
 
     echo -e "HP: $health_colour$player_health\033[0m | GP: \033[33;1m$player_gold\033[0m | LVL: \033[35;1m$player_level\033[0m | XP: \033[36;1m$kills\033[0m"
+
+    echo -e "$update_message"
+    update_message=""
 }
 
 # Function to place an entity (player, enemy, item) in a valid position
@@ -127,12 +126,8 @@ move_player() {
     # Check if the new position is within bounds
     if [[ $new_x -ge 0 && $new_x -lt $dungeon_width && $new_y -ge 0 && $new_y -lt $dungeon_height ]]; then
         if [[ ${dungeon[$new_y]:$new_x:1} == "#" ]]; then
-            echo "You encountered a wall!"
-            read -n 1 -p "Do you want to attack the wall? (y/n): " attack
-            echo
-            if [[ $attack == "y" ]]; then
-                destroy_wall $new_x $new_y
-            fi
+            update_message="You encountered a wall!"
+            destroy_wall $new_x $new_y
         else
             player_x=$new_x
             player_y=$new_y
@@ -149,13 +144,11 @@ destroy_wall() {
     dungeon[$y]=$(echo "${dungeon[$y]}" | sed "s/./ /$((x + 1))")
     if [[ $((RANDOM % 100)) -lt 10 ]]; then
         if [[ $((RANDOM % 100)) -lt 10 ]]; then
-            echo "You found a hidden item!"
             ((player_gold++))
-            echo "Your gold increased by 1."
+            update_message+="\nYou found a hidden item!\nYour gold increased by 1."
         else
-            echo "You were hurt by the falling wall!"
             ((player_health--))
-            echo "Your health decreased by 1."
+            update_message+="\You were hurt by the falling wall!\nYour health decreased by 1."
         fi
     fi
 }
@@ -163,66 +156,30 @@ destroy_wall() {
 # Function to check for encounters
 check_encounter() {
     if [[ $player_x -eq $enemy_x && $player_y -eq $enemy_y ]]; then
-        echo "You encountered an enemy!"
+        update_message="You encountered an enemy!"
         fight_enemy
-    fi
-
-    if [[ $player_x -eq $item_x && $player_y -eq $item_y && ! $has_item ]]; then
-        echo "You found an item!"
-        has_item=true
     fi
 }
 
 # Function to handle combat with the enemy
 fight_enemy() {
-    while true; do
-        read -n 1 -p "What do you want to do? (a/h/q): " action
-        echo
-        case $action in
-            a)
-                if [[ $((RANDOM % 100)) -lt 75 ]]; then
-                    echo "You hit the enemy!"
-                    defeat_enemy
-                    break
-                else
-                    echo "You missed!"
-
-                    # Enemy's turn to attack
-                    if [[ $((RANDOM % 100)) -lt 75 ]]; then
-                        echo "The enemy hits you!"
-                        ((player_health--))
-                    else
-                        echo "The enemy missed!"
-                    fi
-
-                fi
-                ;;
-            h)
-                if [[ $player_health -lt $MAX_PLAYER_HEALTH ]]; then
-                    ((player_health++))
-                    echo "You healed 1 health point."
-                else
-                    echo "You are already at full health."
-                fi
-                ;;
-            q)
-                echo "You chose to flee from the enemy."
-                if [[ $((RANDOM % 100)) -lt 10 ]]; then
-                    echo "The enemy hit you as you ran!"
-                    ((player_health--))
-                fi
-                spawn_new_enemy
-                break
-                ;;
-            *)
-                echo "Invalid action!"
-                ;;
-        esac
-    done
+    if [[ $((RANDOM % 100)) -lt 75 ]]; then
+        update_message="$update_message\nYou hit the enemy!"
+        defeat_enemy
+    else
+        echo "You missed!"
+        # Enemy's turn to attack
+        if [[ $((RANDOM % 100)) -lt 75 ]]; then
+            update_message="$update_message\nThe enemy hits you!"
+            ((player_health--))
+        else
+            update_message="$update_message\nThe enemy missed!"
+        fi
+    fi
 
     # Check the player's health after fighting
     if [[ $player_health -le 0 ]]; then
-        echo "You have been defeated!"
+        update_message="$update_message\nYou have been defeated!"
         PLAYING=false
     fi
 }
@@ -280,6 +237,7 @@ place_entity item
 while $PLAYING; do
     clear
     display_dungeon
+
     read -n 1 -p "Move (w/a/s/d/q): " move
     echo
     move_player $move
