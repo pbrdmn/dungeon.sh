@@ -5,12 +5,8 @@
 # Initial Setup
 MAX_PLAYER_HEALTH=10
 PLAYING=true
-dungeon_width=20
-dungeon_height=10
 player_x=0
 player_y=0
-enemy_x=dungeon_width/2
-enemy_y=dungeon_height/2
 wall_percentage=20 # Percentage of cells that should be walls
 player_health=$MAX_PLAYER_HEALTH
 player_gold=0
@@ -18,6 +14,14 @@ kills=0
 player_level=1
 kills_this_level=0
 update_message=""
+
+# Function to get terminal dimensions
+get_terminal_dimensions() {
+    local term_width=$(tput cols)
+    local term_height=$(tput lines)
+    dungeon_width=$((term_width - 1))  # Adjust for padding
+    dungeon_height=$((term_height - 5)) # Adjust for status bar and other UI elements
+}
 
 # Function to generate the dungeon layout
 generate_dungeon() {
@@ -109,7 +113,7 @@ move_player() {
             PLAYING=false
             ;;
         *)
-            echo "Invalid direction!"
+            update_message="Invalid direction! "
             return
             ;;
     esac
@@ -117,10 +121,10 @@ move_player() {
     # Check if the new position is within bounds
     if [[ $new_x -ge 0 && $new_x -lt $dungeon_width && $new_y -ge 0 && $new_y -lt $dungeon_height ]]; then
         if [[ ${dungeon[$new_y]:$new_x:1} == "#" ]]; then
-            update_message="$update_message\nYou attack a wall!"
+            update_message="${update_message}You attack a wall! "
             destroy_wall $new_x $new_y
         elif [[ $new_x -eq $enemy_x && $new_y -eq $enemy_y ]]; then
-            update_message="$update_message\nYou attack the monster!"
+            update_message="${update_message}You attack the monster! "
             fight_enemy
         else
             player_x=$new_x
@@ -138,10 +142,10 @@ destroy_wall() {
         if [[ $((RANDOM % 100)) -lt 10 ]]; then
             if [[ $((RANDOM % 100)) -lt 10 ]]; then
                 ((player_gold++))
-                update_message="$update_message\nYou found a hidden item!\nYour gold increased by 1."
+                update_message="${update_message}You found a gold coin. "
             else
                 ((player_health--))
-                update_message="$update_message\nYou were hurt by the falling wall!\nYour health decreased by 1."
+                update_message="${update_message}You were hurt by the falling wall. "
             fi
         fi
     fi
@@ -150,7 +154,7 @@ destroy_wall() {
 # Function to check for encounters
 check_encounter() {
     if [[ $player_x -eq $enemy_x && $player_y -eq $enemy_y ]]; then
-        update_message="$update_message\nYou encountered an enemy!"
+        update_message="${update_message}You encountered an enemy! "
         fight_enemy
     fi
 }
@@ -158,28 +162,28 @@ check_encounter() {
 # Function to handle combat with the enemy
 fight_enemy() {
     if [[ $((RANDOM % 100)) -lt 75 ]]; then
-        update_message="$update_message\nYou hit the enemy!"
-        defeat_enemy
+        update_message="${update_message}You defeat the monster! "
+        defeat_monster
     else
-        update_message="$update_message\nYou missed!"
-        # Enemy's turn to attack
+        update_message="${update_message}You miss. "
+        # Monster's turn to attack
         if [[ $((RANDOM % 100)) -lt 75 ]]; then
-            update_message="$update_message\nThe enemy hits you!"
+            update_message="${update_message}The monster hits you! "
             ((player_health--))
         else
-            update_message="$update_message\nThe enemy missed!"
+            update_message="${update_message}The monster missed. "
         fi
     fi
 
     # Check the player's health after fighting
     if [[ $player_health -le 0 ]]; then
-        update_message="$update_message\nYou have been defeated!"
+        update_message="${update_message}You have been defeated! "
         PLAYING=false
     fi
 }
 
 # Function to handle player defeating an enemy
-defeat_enemy() {
+defeat_monster() {
     ((kills++))
     ((kills_this_level++))
     ((player_gold++))
@@ -223,6 +227,7 @@ spawn_new_enemy() {
 }
 
 # Main game loop
+get_terminal_dimensions
 generate_dungeon
 place_entity player
 place_entity enemy
