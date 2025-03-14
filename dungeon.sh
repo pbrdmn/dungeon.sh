@@ -97,18 +97,51 @@ move_player() {
         w)
             ((new_y--))
             ;;
+        W)
+            while (check_space_is_empty $new_x $((new_y-1))); do
+                update_message="${update_message}."
+                ((new_y--))
+            done
+            player_y=$new_y
+            return
+            ;;
         s)
             ((new_y++))
+            ;;
+        S)
+            while (check_space_is_empty $new_x $((new_y+1))); do
+                update_message="${update_message}."
+                ((new_y++))
+            done
+            player_y=$new_y
+            return
             ;;
         a)
             ((new_x--))
             ;;
+        A)
+            while (check_space_is_empty $((new_x-1)) $new_y); do
+                update_message="${update_message}."
+                ((new_x--))
+            done
+            player_x=$new_x
+            return
+            ;;
         d)
             ((new_x++))
+            ;;
+        D)
+            while (check_space_is_empty $((new_x+1)) $new_y); do
+                update_message="${update_message}."
+                ((new_x++))
+            done
+            player_x=$new_x
+            return
             ;;
         q)
             # Player quits
             PLAYING=false
+            return
             ;;
         *)
             update_message="Invalid direction! "
@@ -146,6 +179,26 @@ destroy_wall() {
                 update_message="${update_message}You were hurt by the falling wall. "
             fi
         fi
+    fi
+}
+
+# Function to check if a space is empty
+check_space_is_empty() {
+    echo "Checking space $1, $2"
+    local x=$1
+    local y=$2
+    if [[ $x -lt 0 || $x -ge $dungeon_width || $y -lt 0 || $y -ge $dungeon_height ]]; then
+        echo "Out of bounds"
+        return 1 # Out of bounds
+    elif [[ ${dungeon[$y]:$x:1} == "#" ]]; then
+        echo "Wall"
+        return 1 # Wall
+    elif [[ $x -eq $enemy_x && $y -eq $enemy_y ]]; then
+        echo "Monster"
+        return 1 # Monster
+    else
+        echo "Empty"
+        return 0
     fi
 }
 
@@ -208,7 +261,7 @@ defeat_monster() {
     spawn_new_enemy
 }
 
-# Function to spawn a new enemy at a random edge of the map
+# Function to spawn a new enemy at a location within the map
 spawn_new_enemy() {
     local edges=("top" "bottom" "left" "right")
     local edge=${edges[$RANDOM % ${#edges[@]}]}
@@ -239,8 +292,8 @@ spawn_new_enemy() {
 
 # Initial setup
 # get_terminal_dimensions
-player_x=dungeon_width/2
-player_y=dungeon_height/2
+player_x=$dungeon_width/2
+player_y=$dungeon_height/2
 generate_dungeon
 spawn_new_enemy
 
