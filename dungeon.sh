@@ -5,15 +5,12 @@
 # Initial Setup
 MAX_PLAYER_HEALTH=10
 PLAYING=true
-player_x=0
-player_y=0
 dungeon_width=20
 dungeon_height=10
-enemy_x=2
-enemy_y=2
-item_x=3
-item_y=4
-has_item=false
+player_x=0
+player_y=0
+enemy_x=dungeon_width/2
+enemy_y=dungeon_height/2
 wall_percentage=20 # Percentage of cells that should be walls
 player_health=$MAX_PLAYER_HEALTH
 player_gold=0
@@ -28,7 +25,7 @@ generate_dungeon() {
     for ((y=0; y<dungeon_height; y++)); do
         row=""
         for ((x=0; x<dungeon_width; x++)); do
-            if [[ $((RANDOM % 100)) -lt $wall_percentage ]]; then
+            if [[ $((RANDOM % 100)) -lt $wall_percentage && $x -ne $player_x && $y -ne $player_y && $x -ne $enemy_x && $y -ne $enemy_y ]]; then
                 row+="#"
             else
                 row+="."
@@ -49,8 +46,6 @@ display_dungeon() {
                 echo -en "\033[32;1m@\033[0m"
             elif [[ $x -eq $enemy_x && $y -eq $enemy_y ]]; then
                 echo -en "\033[31;1m&\033[0m"
-            elif [[ $x -eq $item_x && $y -eq $item_y && ! $has_item ]]; then
-                echo -en "\033[33;1m$\033[0m"
             else
                 echo -n " "
             fi
@@ -69,7 +64,7 @@ display_dungeon() {
     update_message=""
 }
 
-# Function to place an entity (player, enemy, item) in a valid position
+# Function to place an entity (player, enemy) in a valid position
 place_entity() {
     local entity=$1
     while true; do
@@ -84,10 +79,6 @@ place_entity() {
                 enemy)
                     enemy_x=$x
                     enemy_y=$y
-                    ;;
-                item)
-                    item_x=$x
-                    item_y=$y
                     ;;
             esac
             break
@@ -126,15 +117,11 @@ move_player() {
     # Check if the new position is within bounds
     if [[ $new_x -ge 0 && $new_x -lt $dungeon_width && $new_y -ge 0 && $new_y -lt $dungeon_height ]]; then
         if [[ ${dungeon[$new_y]:$new_x:1} == "#" ]]; then
-            update_message="You attack the wall!"
+            update_message="$update_message\nYou attack a wall!"
             destroy_wall $new_x $new_y
         elif [[ $new_x -eq $enemy_x && $new_y -eq $enemy_y ]]; then
-            update_message="You attack the monster!"
+            update_message="$update_message\nYou attack the monster!"
             fight_enemy
-        elif [[ $new_x -eq $item_x && $new_y -eq $item_y && ! $has_item ]]; then
-            has_item=true
-            player_gold+=1
-            update_message="You found an item!\nYour gold increased by 1."
         else
             player_x=$new_x
             player_y=$new_y
@@ -146,15 +133,15 @@ move_player() {
 destroy_wall() {
     local x=$1
     local y=$2
-    if [[ $((RANDOM % 100)) -lt 90 ]]; then
+    if [[ $((RANDOM % 100)) -lt 80 ]]; then
         dungeon[$y]=$(echo "${dungeon[$y]}" | sed "s/./ /$((x + 1))")
         if [[ $((RANDOM % 100)) -lt 10 ]]; then
             if [[ $((RANDOM % 100)) -lt 10 ]]; then
                 ((player_gold++))
-                update_message+="\nYou found a hidden item!\nYour gold increased by 1."
+                update_message="$update_message\nYou found a hidden item!\nYour gold increased by 1."
             else
                 ((player_health--))
-                update_message+="\nYou were hurt by the falling wall!\nYour health decreased by 1."
+                update_message="$update_message\nYou were hurt by the falling wall!\nYour health decreased by 1."
             fi
         fi
     fi
@@ -163,7 +150,7 @@ destroy_wall() {
 # Function to check for encounters
 check_encounter() {
     if [[ $player_x -eq $enemy_x && $player_y -eq $enemy_y ]]; then
-        update_message="You encountered an enemy!"
+        update_message="$update_message\nYou encountered an enemy!"
         fight_enemy
     fi
 }
@@ -239,7 +226,6 @@ spawn_new_enemy() {
 generate_dungeon
 place_entity player
 place_entity enemy
-place_entity item
 
 while $PLAYING; do
     clear
