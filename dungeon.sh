@@ -128,13 +128,18 @@ move_player() {
         if [[ ${dungeon[$new_y]:$new_x:1} == "#" ]]; then
             update_message="You encountered a wall!"
             destroy_wall $new_x $new_y
+        elif [[ ${dungeon[$new_y]:$new_x:1} == "&" ]]; then
+            update_message="You encountered an enemy!"
+            fight_enemy
+        elif [[ $new_x -eq $item_x && $new_y -eq $item_y && ! $has_item ]]; then
+            has_item=true
+            player_gold+=1
+            update_message="You found an item!\nYour gold increased by 1."
         else
             player_x=$new_x
             player_y=$new_y
         fi
     fi
-
-    check_encounter
 }
 
 # Function to destroy a wall and possibly reveal an item
@@ -148,16 +153,8 @@ destroy_wall() {
             update_message+="\nYou found a hidden item!\nYour gold increased by 1."
         else
             ((player_health--))
-            update_message+="\You were hurt by the falling wall!\nYour health decreased by 1."
+            update_message+="\nYou were hurt by the falling wall!\nYour health decreased by 1."
         fi
-    fi
-}
-
-# Function to check for encounters
-check_encounter() {
-    if [[ $player_x -eq $enemy_x && $player_y -eq $enemy_y ]]; then
-        update_message="You encountered an enemy!"
-        fight_enemy
     fi
 }
 
@@ -167,7 +164,7 @@ fight_enemy() {
         update_message="$update_message\nYou hit the enemy!"
         defeat_enemy
     else
-        echo "You missed!"
+        update_message="$update_message\nYou missed!"
         # Enemy's turn to attack
         if [[ $((RANDOM % 100)) -lt 75 ]]; then
             update_message="$update_message\nThe enemy hits you!"
