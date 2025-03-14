@@ -3,6 +3,8 @@
 # title: Dungeon Game
 
 # Initial Setup
+dungeon_width=40
+dungeon_height=15
 MAX_PLAYER_HEALTH=10
 PLAYING=true
 player_x=0
@@ -79,10 +81,6 @@ place_entity() {
                 player)
                     player_x=$x
                     player_y=$y
-                    ;;
-                enemy)
-                    enemy_x=$x
-                    enemy_y=$y
                     ;;
             esac
             break
@@ -226,12 +224,14 @@ spawn_new_enemy() {
     fi
 }
 
-# Main game loop
-get_terminal_dimensions
+# Initial setup
+# get_terminal_dimensions
+player_x=dungeon_width/2
+player_y=dungeon_height/2
 generate_dungeon
-place_entity player
-place_entity enemy
+spawn_new_enemy
 
+# Main game loop
 while $PLAYING; do
     clear
     display_dungeon
