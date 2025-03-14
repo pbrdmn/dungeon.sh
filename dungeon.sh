@@ -254,7 +254,7 @@ while $PLAYING; do
     move_player $move
 done
 
-echo "Game Over!"
+clear
 echo "Level Reached: $player_level"
 echo "Monsters Defeated: $xp"
 echo "Gold Accumulated: $player_gold"
