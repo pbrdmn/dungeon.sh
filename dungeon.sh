@@ -12,9 +12,9 @@ player_y=0
 wall_percentage=20 # Percentage of cells that should be walls
 player_health=$MAX_PLAYER_HEALTH
 player_gold=0
-kills=0
+xp=0
 player_level=1
-kills_this_level=0
+level_xp=0
 update_message=""
 
 # Function to get terminal dimensions
@@ -64,7 +64,7 @@ display_dungeon() {
         health_colour="\033[31;1m"
     fi
 
-    echo -e "HP: $health_colour$player_health\033[0m | GP: \033[33;1m$player_gold\033[0m | LVL: \033[35;1m$player_level\033[0m | XP: \033[36;1m$kills\033[0m"
+    echo -e "HP: $health_colour$player_health\033[0m | GP: \033[33;1m$player_gold\033[0m | LVL: \033[35;1m$player_level\033[0m | XP: \033[36;1m$xp\033[0m"
 
     echo -e "$update_message"
     update_message=""
@@ -182,15 +182,28 @@ fight_enemy() {
 
 # Function to handle player defeating an enemy
 defeat_monster() {
-    ((kills++))
-    ((kills_this_level++))
-    ((player_gold++))
-    if [[ $kills_this_level -eq 10 ]]; then
+    # Gain experience points and possibly level up
+    ((xp++))
+    ((level_xp++))
+    if [[ $level_xp -eq 10 ]]; then
         ((player_level++))
+        level_xp=0
+
+        # Increase player health and generate a new dungeon layout
         ((MAX_PLAYER_HEALTH++))
         player_health=$MAX_PLAYER_HEALTH
-        kills_this_level=0
         generate_dungeon
+    fi
+
+    if [[ $((RANDOM % 100)) -lt 10 ]]; then # 10% chance of finding 3 gold
+        ((player_gold=player_gold+3))
+        update_message="${update_message}You found 3 gold coins. "
+    elif [[ $((RANDOM % 100)) -lt 30 ]]; then # 20% chance of finding 2 gold
+        ((player_gold=player_gold+2))
+        update_message="${update_message}You found 2 gold coins. "
+    elif [[ $((RANDOM % 100)) -lt 80 ]]; then # 50% chance of finding 1 gold
+        ((player_gold=player_gold+1))
+        update_message="${update_message}You found a gold coin. "
     fi
     spawn_new_enemy
 }
@@ -243,5 +256,5 @@ done
 
 echo "Game Over!"
 echo "Level Reached: $player_level"
-echo "Monsters Defeated: $kills"
+echo "Monsters Defeated: $xp"
 echo "Gold Accumulated: $player_gold"
