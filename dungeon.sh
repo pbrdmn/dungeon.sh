@@ -176,14 +176,14 @@ destroy_wall() {
     local y=$2
     if [[ $((RANDOM % 100)) -lt $wall_break_chance ]]; then
         dungeon[$y]=$(echo "${dungeon[$y]}" | sed "s/./ /$((x + 1))")
-        if [[ $((RANDOM % 100)) -lt 10 ]]; then
-            if [[ $((RANDOM % 100)) -lt 10 ]]; then
-                ((player_gold++))
-                update_message="${update_message}\033[33;1mYou found a gold coin\033[0m. "
-            else
-                ((player_health--))
-                update_message="${update_message}\033[31;1mYou were hurt by the falling wall\033[0m. "
-            fi
+        if [[ $((RANDOM % 100)) -lt 50 ]]; then
+            # 50% chance of taking damage
+            ((player_health--))
+            update_message="${update_message}\033[31;1mYou were hurt by the falling wall\033[0m. "
+        elif [[ $((RANDOM % 100)) -lt 55 ]]; then
+            # 5% chance of finding gold
+            ((player_gold++))
+            update_message="${update_message}\033[33;1mYou found a gold coin\033[0m. "
         fi
     fi
 }
