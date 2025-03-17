@@ -200,7 +200,7 @@ attack_monster() {
         update_message="${update_message}You miss. "
         # Monster's turn to attack
         if [[ $((RANDOM % 100)) -lt 75 ]]; then
-            update_message="${update_message}The monster hits you! "
+            update_message="${update_message}\033[31;1mThe monster hits you for ${player_level} damage!\033[0m "
             player_health=$((player_health-player_level))
         else
             update_message="${update_message}The monster missed. "
@@ -209,7 +209,7 @@ attack_monster() {
 
     # Check the player's health after fighting
     if [[ $player_health -le 0 ]]; then
-        update_message="${update_message}You have been defeated! "
+        update_message="${update_message}\033[31;1mYou have been defeated!!\033[0m "
         PLAYING=false
     fi
 }
