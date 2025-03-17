@@ -265,33 +265,22 @@ defeat_monster() {
     spawn_new_enemy
 }
 
-# Function to spawn a new enemy at a location within the map
+# Function to spawn a new enemy
 spawn_new_enemy() {
-    local edges=("top" "bottom" "left" "right")
-    local edge=${edges[$RANDOM % ${#edges[@]}]}
-    case $edge in
-        top)
-            enemy_x=$((RANDOM % dungeon_width))
-            enemy_y=1
-            ;;
-        bottom)
-            enemy_x=$((RANDOM % dungeon_width))
-            enemy_y=$((dungeon_height - 2))
-            ;;
-        left)
-            enemy_x=1
-            enemy_y=$((RANDOM % dungeon_height))
-            ;;
-        right)
-            enemy_x=$((dungeon_width - 2))
-            enemy_y=$((RANDOM % dungeon_height))
-            ;;
-    esac
+    while true; do
+        local x=$((RANDOM % dungeon_width))
+        local y=$((RANDOM % dungeon_height))
+        local dx=$((x - player_x))
+        local dy=$((y - player_y))
+        local distance=$((dx * dx + dy * dy))
 
-    # Ensure the enemy is not placed on a wall
-    if [[ ${dungeon[$enemy_y]:$enemy_x:1} == "#" ]]; then
-        dungeon[$enemy_y]=$(echo "${dungeon[$enemy_y]}" | sed "s/./ /$((enemy_x + 1))")
-    fi
+        # Ensure the enemy is not placed on a wall and is at least 5 spaces away from the player
+        if [[ ${dungeon[$y]:$x:1} != "#" && $distance -ge 25 ]]; then
+            enemy_x=$x
+            enemy_y=$y
+            break
+        fi
+    done
 }
 
 # Initial setup
