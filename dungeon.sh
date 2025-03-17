@@ -118,6 +118,7 @@ move_player() {
             ((new_y--))
             ;;
         W)
+            update_message="${update_message}Run up"
             while (check_space_is_empty $new_x $((new_y-1))); do
                 update_message="${update_message}."
                 ((new_y--))
@@ -129,6 +130,7 @@ move_player() {
             ((new_y++))
             ;;
         S)
+            update_message="${update_message}Run down"
             while (check_space_is_empty $new_x $((new_y+1))); do
                 update_message="${update_message}."
                 ((new_y++))
@@ -140,6 +142,7 @@ move_player() {
             ((new_x--))
             ;;
         A)
+            update_message="${update_message}Run left"
             while (check_space_is_empty $((new_x-1)) $new_y); do
                 update_message="${update_message}."
                 ((new_x--))
@@ -151,6 +154,7 @@ move_player() {
             ((new_x++))
             ;;
         D)
+            update_message="${update_message}Run right"
             while (check_space_is_empty $((new_x+1)) $new_y); do
                 update_message="${update_message}."
                 ((new_x++))
