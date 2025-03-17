@@ -143,7 +143,7 @@ move_player() {
             player_x=$new_x
             return
             ;;
-        q|Q)
+        Q)
             # Player quits
             PLAYING=false
             return
