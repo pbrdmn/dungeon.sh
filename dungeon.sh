@@ -118,13 +118,16 @@ move_player() {
             ((new_y--))
             ;;
         W)
-            update_message="${update_message}Run up"
             while (check_space_is_empty $new_x $((new_y-1))); do
-                update_message="${update_message}."
                 ((new_y--))
             done
-            player_y=$new_y
-            return
+
+            # Move the player to the new position or attack the obstacle
+            if [[ $player_y -ne $new_y ]]; then
+                player_y=$new_y
+            else
+                ((new_y--))
+            fi
             ;;
         s)
             ((new_y++))
