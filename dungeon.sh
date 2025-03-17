@@ -3,6 +3,7 @@
 # title: Dungeon Game
 
 # Initial Setup
+trap ctrl_c INT
 dungeon_width=40
 dungeon_height=15
 MAX_PLAYER_HEALTH=10
@@ -279,6 +280,21 @@ spawn_new_monster() {
     done
 }
 
+# Function to show game summary
+game_summary() {
+    clear
+    echo "Level Reached: $player_level"
+    echo "Monsters Defeated: $xp"
+    echo "Gold Accumulated: $player_gold"
+}
+
+# Function to quit
+ctrl_c() {
+    PLAYING=false
+    game_summary
+    exit
+}
+
 # Initial setup
 # get_terminal_dimensions
 player_x=$dungeon_width/2
@@ -296,7 +312,4 @@ while $PLAYING; do
     move_player $move
 done
 
-clear
-echo "Level Reached: $player_level"
-echo "Monsters Defeated: $xp"
-echo "Gold Accumulated: $player_gold"
+game_summary
