@@ -10,6 +10,7 @@ PLAYING=true
 player_x=0
 player_y=0
 wall_percentage=20 # Percentage of cells that should be walls
+wall_break_chance=20 # Chance of breaking a wall
 player_health=$MAX_PLAYER_HEALTH
 player_gold=0
 xp=0
@@ -169,19 +170,19 @@ move_player() {
     fi
 }
 
-# Function to destroy a wall and possibly reveal an item
+# Function to destroy a wall
 destroy_wall() {
     local x=$1
     local y=$2
-    if [[ $((RANDOM % 100)) -lt 80 ]]; then
+    if [[ $((RANDOM % 100)) -lt $wall_break_chance ]]; then
         dungeon[$y]=$(echo "${dungeon[$y]}" | sed "s/./ /$((x + 1))")
         if [[ $((RANDOM % 100)) -lt 10 ]]; then
             if [[ $((RANDOM % 100)) -lt 10 ]]; then
                 ((player_gold++))
-                update_message="${update_message}You found a gold coin. "
+                update_message="${update_message}\033[33;1mYou found a gold coin\033[0m. "
             else
                 ((player_health--))
-                update_message="${update_message}You were hurt by the falling wall. "
+                update_message="${update_message}\033[31;1mYou were hurt by the falling wall\033[0m. "
             fi
         fi
     fi
