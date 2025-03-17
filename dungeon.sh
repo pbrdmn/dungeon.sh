@@ -6,18 +6,20 @@
 trap ctrl_c INT
 dungeon_width=45
 dungeon_height=15
-MAX_PLAYER_HEALTH=10
-PLAYING=true
-player_x=0
-player_y=0
 wall_percentage=20 # Percentage of cells that should be walls
 wall_break_chance=50 # Chance of breaking a wall
+MAX_PLAYER_HEALTH=10
+PLAYING=true
+update_message=""
+
+player_name="Player"
+player_x=0
+player_y=0
 player_health=$MAX_PLAYER_HEALTH
 player_gold=0
 xp=0
 player_level=1
 level_xp=0
-update_message=""
 
 # Function to get terminal dimensions
 get_terminal_dimensions() {
