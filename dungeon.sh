@@ -126,11 +126,6 @@ move_player() {
             player_x=$new_x
             return
             ;;
-        Q)
-            # Player quits
-            PLAYING=false
-            return
-            ;;
         *)
             update_message="Invalid direction! "
             return
@@ -289,7 +284,7 @@ while $PLAYING; do
     clear
     display_dungeon
 
-    read -n 1 -p "Move (w/a/s/d/q): " move
+    read -n 1 -p "Move (w/a/s/d): " move
     echo
     move_player $move
 done
