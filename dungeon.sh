@@ -33,7 +33,7 @@ generate_dungeon() {
         row=""
         for ((x=0; x<dungeon_width; x++)); do
             if [[ $((RANDOM % 100)) -lt $wall_percentage ]]; then
-		        if [[ ($x -eq $player_x && $y -eq $player_y) || ($x -eq $enemy_x && $y -eq $enemy_y) ]]; then
+		        if [[ ($x -eq $player_x && $y -eq $player_y) || ($x -eq $monster_x && $y -eq $monster_y) ]]; then
                     row+="."
 		        else
                     row+="#"
@@ -55,7 +55,7 @@ display_dungeon() {
                 echo -en "\033[0;1m▉\033[0m"
             elif [[ $x -eq $player_x && $y -eq $player_y ]]; then
                 echo -en "\033[32;1m@\033[0m"
-            elif [[ $x -eq $enemy_x && $y -eq $enemy_y ]]; then
+            elif [[ $x -eq $monster_x && $y -eq $monster_y ]]; then
                 echo -en "\033[31;1m&\033[0m"
             else
                 echo -n " "
@@ -75,7 +75,7 @@ display_dungeon() {
     update_message=""
 }
 
-# Function to place an entity (player, enemy) in a valid position
+# Function to place an entity (player, monster) in a valid position
 place_entity() {
     local entity=$1
     while true; do
@@ -159,7 +159,7 @@ move_player() {
         if [[ ${dungeon[$new_y]:$new_x:1} == "#" ]]; then
             update_message="${update_message}You attack a wall! "
             destroy_wall $new_x $new_y
-        elif [[ $new_x -eq $enemy_x && $new_y -eq $enemy_y ]]; then
+        elif [[ $new_x -eq $monster_x && $new_y -eq $monster_y ]]; then
             update_message="${update_message}You attack the monster! "
             attack_monster
         else
@@ -199,7 +199,7 @@ check_space_is_empty() {
     elif [[ ${dungeon[$y]:$x:1} == "#" ]]; then
         echo "Wall"
         return 1 # Wall
-    elif [[ $x -eq $enemy_x && $y -eq $enemy_y ]]; then
+    elif [[ $x -eq $monster_x && $y -eq $monster_y ]]; then
         echo "Monster"
         return 1 # Monster
     else
@@ -231,7 +231,7 @@ attack_monster() {
     fi
 }
 
-# Function to handle player defeating an enemy
+# Function to handle player defeating an monster
 defeat_monster() {
     # Gain experience points
     ((xp++))
@@ -258,11 +258,11 @@ defeat_monster() {
         ((player_gold=player_gold+1))
         update_message="${update_message}You found a gold coin. "
     fi
-    spawn_new_enemy
+    spawn_new_monster
 }
 
-# Function to spawn a new enemy
-spawn_new_enemy() {
+# Function to spawn a new monster
+spawn_new_monster() {
     while true; do
         local x=$((RANDOM % dungeon_width))
         local y=$((RANDOM % dungeon_height))
@@ -270,10 +270,10 @@ spawn_new_enemy() {
         local dy=$((y - player_y))
         local distance=$((dx * dx + dy * dy))
 
-        # Ensure the enemy is not placed on a wall and is at least 5 spaces away from the player
+        # Ensure the monster is not placed on a wall and is at least 5 spaces away from the player
         if [[ ${dungeon[$y]:$x:1} != "#" && $distance -ge 25 ]]; then
-            enemy_x=$x
-            enemy_y=$y
+            monster_x=$x
+            monster_y=$y
             break
         fi
     done
@@ -284,7 +284,7 @@ spawn_new_enemy() {
 player_x=$dungeon_width/2
 player_y=$dungeon_height/2
 generate_dungeon
-spawn_new_enemy
+spawn_new_monster
 
 # Main game loop
 while $PLAYING; do
