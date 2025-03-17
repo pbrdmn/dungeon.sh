@@ -160,7 +160,7 @@ move_player() {
             destroy_wall $new_x $new_y
         elif [[ $new_x -eq $enemy_x && $new_y -eq $enemy_y ]]; then
             update_message="${update_message}You attack the monster! "
-            fight_enemy
+            attack_monster
         else
             player_x=$new_x
             player_y=$new_y
@@ -206,16 +206,8 @@ check_space_is_empty() {
     fi
 }
 
-# Function to check for encounters
-check_encounter() {
-    if [[ $player_x -eq $enemy_x && $player_y -eq $enemy_y ]]; then
-        update_message="${update_message}You encountered an enemy! "
-        fight_enemy
-    fi
-}
-
-# Function to handle combat with the enemy
-fight_enemy() {
+# Function to handle combat with the monster
+attack_monster() {
     if [[ $((RANDOM % 100)) -lt 75 ]]; then
         update_message="${update_message}You defeat the monster! "
         defeat_monster
