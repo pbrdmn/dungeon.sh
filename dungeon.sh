@@ -24,7 +24,7 @@ get_terminal_dimensions() {
     local term_width=$(tput cols)
     local term_height=$(tput lines)
     dungeon_width=$((term_width - 1))  # Adjust for padding
-    dungeon_height=$((term_height - 5)) # Adjust for status bar and other UI elements
+    dungeon_height=$((term_height - 6)) # Adjust for status bar and other UI elements
 }
 
 # Function to generate the dungeon layout
@@ -321,9 +321,9 @@ ctrl_c() {
 }
 
 # Initial setup
-# get_terminal_dimensions
-player_x=$dungeon_width/2
-player_y=$dungeon_height/2
+get_terminal_dimensions
+player_x=$(((RANDOM % (dungeon_width-2)) + 1))
+player_y=$(((RANDOM % (dungeon_height-2)) + 1))
 generate_dungeon
 spawn_new_monster
 
