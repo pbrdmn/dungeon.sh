@@ -4,7 +4,7 @@
 
 # Initial Setup
 trap ctrl_c INT
-dungeon_width=40
+dungeon_width=45
 dungeon_height=15
 MAX_PLAYER_HEALTH=10
 PLAYING=true
@@ -30,21 +30,53 @@ get_terminal_dimensions() {
 # Function to generate the dungeon layout
 generate_dungeon() {
     dungeon=()
-    for ((y=0; y<dungeon_height; y++)); do
-        row=""
-        for ((x=0; x<dungeon_width; x++)); do
-            if [[ $((RANDOM % 100)) -lt $wall_percentage ]]; then
-		        if [[ ($x -eq $player_x && $y -eq $player_y) || ($x -eq $monster_x && $y -eq $monster_y) ]]; then
-                    row+="."
-		        else
-                    row+="#"
+    local width=$dungeon_width
+    local height=$dungeon_height
+    
+    # Ensure odd dimensions for proper dungeon structure
+    (( width % 2 == 0 )) && (( width++ ))
+    (( height % 2 == 0 )) && (( height++ ))
+    
+    # Initialize dungeon with walls
+    for (( y=0; y<height; y++ )); do
+        dungeon[y]="$(printf '#%.0s' $(seq 1 $width))"
+    done
+    
+    # Recursive function to carve paths
+    carve() {
+        local x=$1
+        local y=$2
+        dungeon[y]="${dungeon[y]:0:x}.${dungeon[y]:x+1}"
+        local directions=(0 1 2 3)
+        
+        # Shuffle directions
+        for (( i=0; i<4; i++ )); do
+            local j=$(( RANDOM % 4 ))
+            temp=${directions[i]}
+            directions[i]=${directions[j]}
+            directions[j]=$temp
+        done
+        
+        for dir in "${directions[@]}"; do
+            local nx=$x
+            local ny=$y
+            case $dir in
+                0) (( nx -= 2 )) ;; # Left
+                1) (( nx += 2 )) ;; # Right
+                2) (( ny -= 2 )) ;; # Up
+                3) (( ny += 2 )) ;; # Down
+            esac
+            if (( nx > 0 && nx < width-1 && ny > 0 && ny < height-1 )); then
+                if [[ ${dungeon[ny]:nx:1} == "#" ]]; then
+                    dungeon[$(((ny+y)/2))]="${dungeon[$(((ny+y)/2))]:0:$(((nx+x)/2))}.${dungeon[$(((ny+y)/2))]:$(((nx+x)/2))+1}"
+                    carve $nx $ny
                 fi
-            else
-                row+="."
             fi
         done
-        dungeon+=("$row")
-    done
+    }
+    
+    # Start carving from the player's location
+    carve $player_x $player_y
 }
 
 # Function to display the dungeon
