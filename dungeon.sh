@@ -162,6 +162,7 @@ move_player() {
             update_message="${update_message}You attack the monster! "
             attack_monster
         else
+            # Move smoothly to the new location
             player_x=$new_x
             player_y=$new_y
         fi
@@ -231,10 +232,12 @@ attack_monster() {
 
 # Function to handle player defeating an enemy
 defeat_monster() {
-    # Gain experience points and possibly level up
+    # Gain experience points
     ((xp++))
     ((level_xp++))
-    if [[ $level_xp -eq 10 ]]; then
+    
+    # Level up
+    if [[ $level_xp -eq $((player_level * 10)) ]]; then
         ((player_level++))
         level_xp=0
 
