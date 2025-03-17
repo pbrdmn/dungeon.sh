@@ -148,25 +148,31 @@ move_player() {
             ((new_x--))
             ;;
         A)
-            update_message="${update_message}Run left"
             while (check_space_is_empty $((new_x-1)) $new_y); do
-                update_message="${update_message}."
                 ((new_x--))
             done
-            player_x=$new_x
-            return
+
+            # Move the player to the new position or attack the obstacle
+            if [[ $player_x -ne $new_x ]]; then
+                player_x=$new_x
+            else
+                ((new_x--))
+            fi
             ;;
         d)
             ((new_x++))
             ;;
         D)
-            update_message="${update_message}Run right"
             while (check_space_is_empty $((new_x+1)) $new_y); do
-                update_message="${update_message}."
                 ((new_x++))
             done
-            player_x=$new_x
-            return
+
+            # Move the player to the new position or attack the obstacle
+            if [[ $player_x -ne $new_x ]]; then
+                player_x=$new_x
+            else
+                ((new_x++))
+            fi
             ;;
         *)
             update_message="Invalid direction! "
