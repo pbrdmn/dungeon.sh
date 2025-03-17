@@ -324,6 +324,8 @@ ctrl_c() {
 }
 
 # Initial setup
+read -p 'Enter your name: ' player_name
+
 get_terminal_dimensions
 player_x=$(((RANDOM % (dungeon_width-2)) + 1))
 player_y=$(((RANDOM % (dungeon_height-2)) + 1))
