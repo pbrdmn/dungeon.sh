@@ -31,8 +31,12 @@ generate_dungeon() {
     for ((y=0; y<dungeon_height; y++)); do
         row=""
         for ((x=0; x<dungeon_width; x++)); do
-            if [[ $((RANDOM % 100)) -lt $wall_percentage && $x -ne $player_x && $y -ne $player_y && $x -ne $enemy_x && $y -ne $enemy_y ]]; then
-                row+="#"
+            if [[ $((RANDOM % 100)) -lt $wall_percentage ]]; then
+		        if [[ ($x -eq $player_x && $y -eq $player_y) || ($x -eq $enemy_x && $y -eq $enemy_y) ]]; then
+                    row+="."
+		        else
+                    row+="#"
+                fi
             else
                 row+="."
             fi
