@@ -83,7 +83,7 @@ generate_dungeon() {
 
 # Function to display the dungeon
 display_dungeon() {
-    echo "Dungeon:"
+    echo "${player_name}'s Dungeon:"
     for ((y=0; y<dungeon_height; y++)); do
         for ((x=0; x<dungeon_width; x++)); do
             if [[ ${dungeon[$y]:$x:1} == "#" ]]; then
@@ -325,6 +325,7 @@ ctrl_c() {
 
 # Initial setup
 read -p 'Enter your name: ' player_name
+player_name=${player_name:-Player}
 
 get_terminal_dimensions
 player_x=$(((RANDOM % (dungeon_width-2)) + 1))
