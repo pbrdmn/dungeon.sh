@@ -310,9 +310,10 @@ spawn_new_monster() {
 # Function to show game summary
 game_summary() {
     clear
-    echo "Level Reached: $player_level"
-    echo "Monsters Defeated: $xp"
-    echo "Gold Accumulated: $player_gold"
+    echo -en "Reached "
+    echo -en "\033[35;1mLevel $player_level\033[0m with "
+    echo -en "\033[36;1m$xp XP\033[0m and "
+    echo -e "\033[33;1m$player_gold gold\033[0m."
 }
 
 # Function to quit
