@@ -218,7 +218,7 @@ attack_monster() {
         # Monster's turn to attack
         if [[ $((RANDOM % 100)) -lt 75 ]]; then
             update_message="${update_message}The monster hits you! "
-            ((player_health--))
+            player_health=$((player_health-player_level))
         else
             update_message="${update_message}The monster missed. "
         fi
