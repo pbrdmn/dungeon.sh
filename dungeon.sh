@@ -314,6 +314,7 @@ game_summary() {
     echo -en "\033[35;1mLevel $player_level\033[0m with "
     echo -en "\033[36;1m$xp XP\033[0m and "
     echo -e "\033[33;1m$player_gold gold\033[0m."
+    echo -e "${player_name} reached Level $player_level with $xp XP and $player_gold gold on `date -I`." >> scores.txt
 }
 
 # Function to quit
