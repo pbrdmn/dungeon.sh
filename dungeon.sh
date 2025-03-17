@@ -76,24 +76,6 @@ display_dungeon() {
     update_message=""
 }
 
-# Function to place an entity (player, monster) in a valid position
-place_entity() {
-    local entity=$1
-    while true; do
-        local x=$((RANDOM % dungeon_width))
-        local y=$((RANDOM % dungeon_height))
-        if [[ ${dungeon[$y]:$x:1} != "#" ]]; then
-            case $entity in
-                player)
-                    player_x=$x
-                    player_y=$y
-                    ;;
-            esac
-            break
-        fi
-    done
-}
-
 # Function to handle player movement
 move_player() {
     local direction=$1
