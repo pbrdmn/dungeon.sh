@@ -20,12 +20,14 @@ player_gold=0
 xp=0
 player_level=1
 level_xp=0
+monster_x=10
+monster_y=10
 
 # Function to get terminal dimensions
 get_terminal_dimensions() {
     local term_width=$(tput cols)
     local term_height=$(tput lines)
-    dungeon_width=$((term_width - 1))  # Adjust for padding
+    dungeon_width=$((term_width - 1)) # Adjust for padding
     dungeon_height=$((term_height - 6)) # Adjust for status bar and other UI elements
 }
 
@@ -34,23 +36,19 @@ generate_dungeon() {
     dungeon=()
     local width=$dungeon_width
     local height=$dungeon_height
-    
     # Ensure odd dimensions for proper dungeon structure
     (( width % 2 == 0 )) && (( width++ ))
     (( height % 2 == 0 )) && (( height++ ))
-    
     # Initialize dungeon with walls
     for (( y=0; y<height; y++ )); do
         dungeon[y]="$(printf '#%.0s' $(seq 1 $width))"
     done
-    
     # Recursive function to carve paths
     carve() {
         local x=$1
         local y=$2
         dungeon[y]="${dungeon[y]:0:x}.${dungeon[y]:x+1}"
         local directions=(0 1 2 3)
-        
         # Shuffle directions
         for (( i=0; i<4; i++ )); do
             local j=$(( RANDOM % 4 ))
@@ -58,7 +56,6 @@ generate_dungeon() {
             directions[i]=${directions[j]}
             directions[j]=$temp
         done
-        
         for dir in "${directions[@]}"; do
             local nx=$x
             local ny=$y
@@ -76,13 +73,15 @@ generate_dungeon() {
             fi
         done
     }
-    
     # Start carving from the player's location
     carve $player_x $player_y
+
+    display_dungeon
 }
 
 # Function to display the dungeon
 display_dungeon() {
+    clear
     echo "${player_name}'s Dungeon:"
     for ((y=0; y<dungeon_height; y++)); do
         for ((x=0; x<dungeon_width; x++)); do
@@ -103,11 +102,6 @@ display_dungeon() {
     if [[ $player_health -lt 5 ]]; then
         health_colour="\033[31;1m"
     fi
-
-    echo -e "HP: $health_colour$player_health\033[0m | GP: \033[33;1m$player_gold\033[0m | LVL: \033[35;1m$player_level\033[0m | XP: \033[36;1m$xp\033[0m"
-
-    echo -e "$update_message"
-    update_message=""
 }
 
 # Function to handle player movement
@@ -123,7 +117,6 @@ move_player() {
             while (check_space_is_empty $new_x $((new_y-1))); do
                 ((new_y--))
             done
-
             # Move the player to the new position or attack the obstacle
             if [[ $player_y -ne $new_y ]]; then
                 player_y=$new_y
@@ -138,7 +131,6 @@ move_player() {
             while (check_space_is_empty $new_x $((new_y+1))); do
                 ((new_y++))
             done
-
             # Move the player to the new position or attack the obstacle
             if [[ $player_y -ne $new_y ]]; then
                 player_y=$new_y
@@ -153,7 +145,6 @@ move_player() {
             while (check_space_is_empty $((new_x-1)) $new_y); do
                 ((new_x--))
             done
-
             # Move the player to the new position or attack the obstacle
             if [[ $player_x -ne $new_x ]]; then
                 player_x=$new_x
@@ -168,7 +159,6 @@ move_player() {
             while (check_space_is_empty $((new_x+1)) $new_y); do
                 ((new_x++))
             done
-
             # Move the player to the new position or attack the obstacle
             if [[ $player_x -ne $new_x ]]; then
                 player_x=$new_x
@@ -203,6 +193,8 @@ destroy_wall() {
     local x=$1
     local y=$2
     if [[ $((RANDOM % 100)) -lt $wall_break_chance ]]; then
+        tput cup $((y + 1)) $((x))
+        echo -n " "
         dungeon[$y]=$(echo "${dungeon[$y]}" | sed "s/./ /$((x + 1))")
         if [[ $((RANDOM % 100)) -lt 50 ]]; then
             # 50% chance of taking damage
@@ -218,20 +210,15 @@ destroy_wall() {
 
 # Function to check if a space is empty
 check_space_is_empty() {
-    echo "Checking space $1, $2"
     local x=$1
     local y=$2
     if [[ $x -lt 0 || $x -ge $dungeon_width || $y -lt 0 || $y -ge $dungeon_height ]]; then
-        echo "Out of bounds"
         return 1 # Out of bounds
     elif [[ ${dungeon[$y]:$x:1} == "#" ]]; then
-        echo "Wall"
         return 1 # Wall
     elif [[ $x -eq $monster_x && $y -eq $monster_y ]]; then
-        echo "Monster"
         return 1 # Monster
     else
-        echo "Empty"
         return 0
     fi
 }
@@ -264,12 +251,10 @@ defeat_monster() {
     # Gain experience points
     ((xp++))
     ((level_xp++))
-    
     # Level up
     if [[ $level_xp -eq $((player_level * 10)) ]]; then
         ((player_level++))
         level_xp=0
-
         # Increase player health and generate a new dungeon layout
         ((MAX_PLAYER_HEALTH++))
         player_health=$MAX_PLAYER_HEALTH
@@ -291,6 +276,8 @@ defeat_monster() {
 
 # Function to spawn a new monster
 spawn_new_monster() {
+    prev_monster_x=$monster_x
+    prev_monster_y=$monster_y
     while true; do
         local x=$((RANDOM % dungeon_width))
         local y=$((RANDOM % dungeon_height))
@@ -305,6 +292,7 @@ spawn_new_monster() {
             break
         fi
     done
+    update_monster_position $prev_monster_x $prev_monster_y $monster_x $monster_y
 }
 
 # Function to show game summary
@@ -324,6 +312,44 @@ ctrl_c() {
     exit
 }
 
+# Function to update the player's position partially
+update_player_position() {
+    local prev_x=$1
+    local prev_y=$2
+    local new_x=$3
+    local new_y=$4
+
+    # Clear the previous position
+    tput cup $((prev_y + 1)) $((prev_x + 0))
+    echo -n " "
+
+    # Update the new position
+    tput cup $((new_y + 1)) $((new_x + 0))
+    echo -en "\033[32;1m@\033[0m"
+
+    # Reset the cursor position
+    tput cup $((dungeon_height + 2)) 0
+}
+
+# Function to update the monster's position partially
+update_monster_position() {
+    local prev_x=$1
+    local prev_y=$2
+    local new_x=$3
+    local new_y=$4
+
+    # Clear the previous position
+    tput cup $((prev_y + 1)) $((prev_x + 0))
+    echo -n " "
+
+    # Update the new position
+    tput cup $((new_y + 1)) $((new_x + 0))
+    echo -en "\033[31;1m&\033[0m"
+
+    # Reset the cursor position
+    tput cup $((dungeon_height + 2)) 0
+}
+
 # Initial setup
 read -p 'Enter your name: ' player_name
 player_name=${player_name:-Player}
@@ -336,12 +362,28 @@ spawn_new_monster
 
 # Main game loop
 while $PLAYING; do
-    clear
-    display_dungeon
+    #clear
+    #display_dungeon
 
+    # Status, feedback and input
+    tput cup $((dungeon_height + 1)) 0
+    echo -e "HP: $health_colour$player_health\033[0m | GP: \033[33;1m$player_gold\033[0m | LVL: \033[35;1m$player_level\033[0m | XP: \033[36;1m$xp\033[0m"
+
+    tput cup $((dungeon_height + 2)) 0
+    echo -e $update_message
+    update_message=""
+
+    tput cup $((dungeon_height + 3)) 0
     read -n 1 -p "Move (w/a/s/d): " move
-    echo
+
+    prev_player_x=$player_x
+    prev_player_y=$player_y
+
     move_player $move
+
+    if [[ $prev_player_x -ne $player_x || $prev_player_y -ne $player_y ]]; then
+        update_player_position $prev_player_x $prev_player_y $player_x $player_y
+    fi
 done
 
 game_summary
