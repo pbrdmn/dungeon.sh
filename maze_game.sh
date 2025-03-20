@@ -6,6 +6,8 @@ width=21
 height=11
 player_x=11
 player_y=5
+prev_player_x=$player_x
+prev_player_y=$player_y
 
 generate_new_maze() {
     maze=()
@@ -20,7 +22,7 @@ generate_new_maze() {
     done < <(./maze_generator.sh $width $height $player_x $player_y)
 }
 
-draw_maze() {
+init_maze_display() {
     clear
     for ((y=0; y<${#maze[@]}; y++)); do
         for ((x=0; x<${#maze[y]}; x++)); do
@@ -38,6 +40,23 @@ draw_maze() {
         done
         echo
     done
+}
+
+update_player_display() {
+    # Clear previous player position
+    tput cup $prev_player_y $((prev_player_x))
+    if [[ "${maze[prev_player_y]:prev_player_x:1}" == "#" ]]; then
+        printf "█"
+    elif [[ "${maze[prev_player_y]:prev_player_x:1}" == " " ]]; then
+        printf " "
+    else
+        printf "%s" "${maze[prev_player_y]:prev_player_x:1}"
+    fi
+
+    # Draw new player position
+    tput cup $player_y $player_x
+    printf "@"
+    tput cup $height 0
 }
 
 find_exit() {
@@ -69,23 +88,30 @@ read_input() {
 # Start the game
 generate_new_maze
 find_exit
+init_maze_display
 
 while true; do
-    draw_maze
     dx=0
     dy=0
     read_input
     next_x=$((player_x + dx))
     next_y=$((player_y + dy))
     if [[ ${maze[next_y]:next_x:1} != "#" ]]; then
+        prev_player_x=$player_x
+        prev_player_y=$player_y
         player_x=$next_x
         player_y=$next_y
+        update_player_display
     fi
     if ((player_x == exit_x && player_y == exit_y)); then
-        echo "You reached the exit! Generating new maze..."
+        tput cup $height 0
+        echo "You reached the exit!"
+        sleep 1
+        tput cup $height 0
+        echo "Generating new maze..."
         sleep 1
         generate_new_maze
         find_exit
+        init_maze_display
     fi
 done
-
